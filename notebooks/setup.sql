@@ -649,3 +649,76 @@ GRANT SELECT ON VIEW tb_101.semantic_layer.orders_v TO ROLE PUBLIC;
 GRANT SELECT ON VIEW tb_101.semantic_layer.customer_loyalty_metrics_v TO ROLE PUBLIC;
 GRANT READ ON STAGE tb_101.semantic_layer.semantic_model_stage TO ROLE tb_admin;
 GRANT WRITE ON STAGE tb_101.semantic_layer.semantic_model_stage TO ROLE tb_admin;
+
+-- Notbook 作成スクリプト
+// Step1: テーブル作成 //
+-- ロールの指定
+USE ROLE ACCOUNTADMIN;
+USE WAREHOUSE COMPUTE_WH;
+
+
+// Step2: 各種オブジェクトの作成 //
+
+-- スキーマの作成
+CREATE OR REPLACE SCHEMA tb_101.notebook_schema;
+-- スキーマの指定
+USE SCHEMA tb_101.notebook_schema;
+
+-- ステージの作成
+CREATE OR REPLACE STAGE tb_101.notebook_schema.notebook encryption = (type = 'snowflake_sse') DIRECTORY = (ENABLE = TRUE);
+
+// Step3: 公開されているGitからデータとスクリプトを取得 //
+
+-- Git連携のため、API統合を作成する
+CREATE OR REPLACE API INTEGRATION tb_101_git_api_integration
+  API_PROVIDER = git_https_api
+  API_ALLOWED_PREFIXES = ('https://github.com/sfc-gh-ttakahashi/')
+  ENABLED = TRUE;
+
+-- GIT統合の作成
+CREATE OR REPLACE GIT REPOSITORY TB_101_GIT_INTEGRATION_FOR_HANDSON
+  API_INTEGRATION = tb_101_git_api_integration
+  ORIGIN = 'https://github.com/sfc-gh-ttakahashi/zero-to-snowflake-notebooks.git';
+
+-- チェックする
+ls @TB_101_GIT_INTEGRATION_FOR_HANDSON/branches/main;
+
+// Step4: NotebookとStreamlitを作成 //
+
+-- Notebookの作成
+CREATE OR REPLACE NOTEBOOK vignette1
+    FROM @TB_101_GIT_INTEGRATION_FOR_HANDSON/branches/main/notebooks
+    MAIN_FILE = 'vignette-1.ipynb'
+    QUERY_WAREHOUSE = tb_dev_wh
+    WAREHOUSE = tb_dev_wh;
+CREATE OR REPLACE NOTEBOOK vignette2
+    FROM @TB_101_GIT_INTEGRATION_FOR_HANDSON/branches/main/notebooks
+    MAIN_FILE = 'vignette-2.ipynb'
+    QUERY_WAREHOUSE = tb_dev_wh
+    WAREHOUSE = tb_dev_wh;
+CREATE OR REPLACE NOTEBOOK vignette3aisql
+    FROM @TB_101_GIT_INTEGRATION_FOR_HANDSON/branches/main/notebooks
+    MAIN_FILE = 'vignette-3-aisql.ipynb'
+    QUERY_WAREHOUSE = tb_dev_wh
+    WAREHOUSE = tb_dev_wh;
+CREATE OR REPLACE NOTEBOOK vignette3copilot
+    FROM @TB_101_GIT_INTEGRATION_FOR_HANDSON/branches/main/notebooks
+    MAIN_FILE = 'vignette-3-copilot.ipynb'
+    QUERY_WAREHOUSE = tb_dev_wh
+    WAREHOUSE = tb_dev_wh;
+CREATE OR REPLACE NOTEBOOK vignette4
+    FROM @TB_101_GIT_INTEGRATION_FOR_HANDSON/branches/main/notebooks
+    MAIN_FILE = 'vignette-4.ipynb'
+    QUERY_WAREHOUSE = tb_dev_wh
+    WAREHOUSE = tb_dev_wh;
+CREATE OR REPLACE NOTEBOOK vignette5
+    FROM @TB_101_GIT_INTEGRATION_FOR_HANDSON/branches/main/notebooks
+    MAIN_FILE = 'vignette-5.ipynb'
+    QUERY_WAREHOUSE = tb_dev_wh
+    WAREHOUSE = tb_dev_wh;
+
+-- Streamlit in Snowflakeの作成
+CREATE OR REPLACE STREAMLIT sis_snowretail_analysis_dev
+    FROM @TB_101_GIT_INTEGRATION_FOR_HANDSON/branches/main/notebooks/demo/streamlit
+    MAIN_FILE = 'streamlit_app.py'
+    QUERY_WAREHOUSE = tb_dev_wh;
