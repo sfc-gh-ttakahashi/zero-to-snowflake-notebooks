@@ -719,6 +719,6 @@ CREATE OR REPLACE NOTEBOOK vignette5
 
 -- Streamlit in Snowflakeの作成
 CREATE OR REPLACE STREAMLIT sis_snowretail_analysis_dev
-    FROM @TB_101_GIT_INTEGRATION_FOR_HANDSON/branches/main/notebooks/demo/streamlit
+    FROM @TB_101_GIT_INTEGRATION_FOR_HANDSON/branches/main/demo/streamlit
     MAIN_FILE = 'streamlit_app.py'
     QUERY_WAREHOUSE = tb_dev_wh;
